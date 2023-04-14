@@ -17,7 +17,7 @@ void find_files_with_extension_and_search_text(const std::string &path, const st
         continue;
     }
     auto entry = *iter;
-    if (!entry.is_regular_file() || entry.path().extension() != extension)
+    if (entry.path().extension() != extension || !entry.is_regular_file())
       continue;
     
     // if search_text is empty, print all files with the given extension
@@ -55,13 +55,13 @@ int main(int argc, char *argv[])
 
   const std::string path = argv[1];
   const std::string extension = argv[2];
-  // if argc == 3, search_text will be empty
-  // set search_text to empty string if argc == 3
+  
   std::string search_text;
   if (argc == 4) {
     search_text = argv[3];
   } else {
     search_text = "";
   }
+  
   find_files_with_extension_and_search_text(path, extension, search_text);
 }
