@@ -19,7 +19,7 @@ The program has been tested on MacOS X (Ventura 13.3). Compatibility with other 
 **Compilation**
 
 ```bash
-make
+$ make
 ```
 
 The executable `./search` is created.
@@ -27,7 +27,7 @@ The executable `./search` is created.
 **Installation**
 
 ```bash
-sudo make install
+$ sudo make install
 ```
 
 The `search` command is copied to `/usr/bin/search` and then available for execution by typing `search` in the command line.
