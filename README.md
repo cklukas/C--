@@ -9,3 +9,19 @@ Errors, e.g. when reading a file, or when traversing into a directory (e.g. acce
 A call 'search /path/to/search .txt example' is similar to the Linux command 'grep -r --include "*.txt" "example" /path/to/search'.
 Usage: ./search <folder> <extension> [<search_text>]
 ```
+
+**Compilation**
+
+```bash
+make
+```
+
+The executable `./search` is created.
+
+**Installation**
+
+```bash
+sudo make install
+```
+
+The `search` command is copied to `/usr/bin/search` and then available for execution by typing `search` in the command line.
