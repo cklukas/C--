@@ -1,3 +1,10 @@
+// search.cpp
+//
+// Created: 2023-04-14
+// Author: (c) 2023 by C. Klukas
+// License: MIT
+// Description: Searches for text files that contain a specific search term and prints the file names to the console.
+//
 #include <iostream>
 #include <filesystem>
 #include <fstream>
