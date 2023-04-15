@@ -16,31 +16,14 @@ std::string toLowerS(std::string str) {
     return str;
 }
 
-void find_files_with_extension_and_search_text(const std::string &path, const std::string &extension, 
-      const bool ignore_case, const bool use_and, const std::vector<std::string>& search_terms)
-{
-  auto iter = fs::recursive_directory_iterator(path, fs::directory_options::skip_permission_denied | fs::directory_options::follow_directory_symlink);
-  auto end_iter = fs::end(iter);
-  auto ec = std::error_code();
-  for (; iter != end_iter; iter.increment(ec))
-  {
-    if (ec)
-    {
-        continue;
-    }
-    auto entry = *iter;
-    if (entry.path().extension() != extension || !entry.is_regular_file())
-      continue;
-    
-    // if search_text is empty, print all files with the given extension
+void check_file(const std::filesystem::path path, const bool ignore_case, const bool use_and, const std::vector<std::string>& search_terms) {
     if (search_terms.empty())
     {
-      std::cout << entry.path().string() << '\n';
-      continue;
+      std::cout << path.string() << '\n';
+      return;
     }
-    
-    // otherwise, search for the search_text in the file and if found, print the file name
-    std::ifstream file(entry.path());
+
+    std::ifstream file(path);
     std::string line;
     bool has_all_search_terms = false;
     bool has_at_least_one_search_term = false;
@@ -73,14 +56,33 @@ void find_files_with_extension_and_search_text(const std::string &path, const st
     
     if ( (use_and && has_all_search_terms) || (!use_and && has_at_least_one_search_term) )
     {
-      std::cout << entry.path().string() << '\n';
+      std::cout << path.string() << '\n';
     }
+}
+
+void find_files_with_extension_and_search_text(const std::string &path, const std::string &extension, 
+      const bool ignore_case, const bool use_and, const std::vector<std::string>& search_terms)
+{
+  auto iter = fs::recursive_directory_iterator(path, fs::directory_options::skip_permission_denied | fs::directory_options::follow_directory_symlink);
+  auto end_iter = fs::end(iter);
+  auto ec = std::error_code();
+  for (; iter != end_iter; iter.increment(ec))
+  {
+    if (ec)
+    {
+        continue;
+    }
+    auto entry = *iter;
+    if (entry.path().extension() != extension || !entry.is_regular_file())
+      continue;
+    
+    check_file(entry.path(), ignore_case, use_and, search_terms);
   }
 }
 
 int main(int argc, char *argv[])
 {
-  if (argc < 3)
+  if ( (argc < 2) || (strcmp(argv[1], "-h")==0) || (strcmp(argv[1], "--help")==0) )
   {
     std::cerr << "search - (c) 2023 by C. Klukas\n";
     std::cerr << "------------------------------\n";
@@ -90,27 +92,34 @@ int main(int argc, char *argv[])
     std::cerr << "Multiple search terms can be specified.\n";
     std::cerr << "If -o is specified, a file is listed, if any search term is found (OR combination)\n";
     std::cerr << "If -i is specified, the search is case insensitive, this applies to the search terms and the provided file extension.\n";
+    std::cerr << "If '-' is specified as search path, the files to be processed are read from stdin and the file extension parameter is not used/expected (second parameter is already a search term or '-i' or '-o').\n";
     std::cerr << "\n";
-    std::cerr << "Usage: " << argv[0] << " <folder> <extension> [<search_term1>] [-i] [-o] [<search_term2>] [<search_term3>]...\n";
+    std::cerr << "Usage (1): " << argv[0] << " <folder> <extension> [<search_term1>] [-i] [-o] [<search_term2>] [<search_term3>]...\n";
+    std::cerr << "Usage (2): find ~ -type f -name \"*.txt\" | " << argv[0] << " - [<search_term1>] [-i] [-o] [<search_term2>] [<search_term3>]...\n";
     return 1;
   }
 
   const std::string path = argv[1];
-  std::string extension = argv[2];
+  std::string extension = "";
   bool use_and = true;
   bool ignore_case = false;
   bool search_or_specified = false;
   std::vector<std::string> search_terms;
-  for (int i = 3; i < argc; ++i) {
+  int start_index = 3;
+  if (path == "-") 
+    start_index = 2;
+  else
+    extension = argv[2];
+  
+  for (int i = start_index; i < argc; ++i) {
       const auto& arg = argv[i];
       if (!search_or_specified && strcmp(arg, "-o")==0) {
           use_and = false;
           search_or_specified = true;
-      }  else if (strcmp(arg, "-i")==0) {
+      }  else if (strcmp(arg, "-i")==0)
           ignore_case = true;
-      } else {
+      else
         search_terms.push_back(argv[i]);
-      }   
   }
 
   if (ignore_case) {
@@ -118,5 +127,12 @@ int main(int argc, char *argv[])
     extension = toLowerS(extension);
   }
   
-  find_files_with_extension_and_search_text(path, extension, ignore_case, use_and, search_terms);
+  if (path == "-") {
+    std::string fn;
+    while (std::getline(std::cin, fn))
+      check_file(fn, ignore_case, use_and, search_terms);
+  } else
+    find_files_with_extension_and_search_text(path, extension, ignore_case, use_and, search_terms);
+  
+  return 0;
 }

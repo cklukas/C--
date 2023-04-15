@@ -37,6 +37,12 @@ To search for .jpg and .JPG files in the home directory or below, use the `-i` o
 $ search ~ .jpg -i
 ```
 
+If you specify '-' as the search path, the command does not search for files but reads the file names from the standard input. This allows you to use the command in combination with other commands, e.g. `find`:
+
+```bash
+$ find ~ -name "*.txt" | search - example
+```
+
 **Requirements**
 
 The command uses the C++17 standard library and is compiled with the g++ compiler command (see `Makefile`). 
@@ -73,9 +79,14 @@ Search all txt or TXT files in the user home directory:
 $ search ~ .txt -i
 ```
 
-
 Search all Python files in the user home directory with the search term "example":
 
 ```bash
 $ search ~ .py example
+```
+
+Use `find` and `search` to search for all .txt files in the user home directory that contain the search term "example":
+
+```bash
+$ find ~ -name "*.txt" | search - example
 ```
