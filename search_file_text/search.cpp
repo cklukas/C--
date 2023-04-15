@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
     std::cerr << "search - (c) 2023 by C. Klukas\n";
     std::cerr << "------------------------------\n";
     std::cerr << "Searches for text files that contain a specific search term and prints the file names to the console.\n";
-    std::cerr << "Errors, e.g. when reading a file or when traversing into a directory (e.g. access denied) are ignored.\n";
+    std::cerr << "Errors when traversing into a directory (e.g. access denied) are ignored.\n";
     std::cerr << "A call 'search /path/to/search .txt example' is similar to the Linux command 'grep -r --include \"*.txt\" \"example\" /path/to/search'.\n";
     std::cerr << "Multiple search terms can be specified, and the search can be restricted to files that contain all search terms (AND) or at least one search term (OR).\n";
     std::cerr << "If AND/OR is not specified for multiple search terms, the default is to only list files which contain all search terms (AND).\n";
