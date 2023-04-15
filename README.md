@@ -11,6 +11,26 @@ A call `search /path/to/search .txt example` is similar to the Linux command `gr
 
 `Usage: ./search <folder> <extension> [<search_text>]`
 
+You may also specifify multiple search terms. To search case-insensitive, use the `-i` option, it applies to the search terms but also to the file extension.
+
+To search all Python files in the user home directory with the search term "hello" and "world", use this command:
+
+```bash
+$ search ~ .py hello world
+```
+
+To make the search case-insensitive, use the `-i` option:
+
+```bash
+$ search ~ .py -i hello world
+```
+
+To search for .jpg and .JPG files in the home directory or below, use the `-i` option:
+
+```bash
+$ search ~ .jpg -i
+```
+
 **Requirements**
 
 The command uses the C++17 standard library and is compiled with the g++ compiler command (see `Makefile`). 
@@ -34,10 +54,17 @@ The `search` command is copied to `/usr/bin/search` and then available for execu
 
 **Example calls**
 
-Search all txt files in the user home directory:
+Search all sh files in the user home directory:
 
 ```bash
-$ search ~ .txt
+$ search ~ .sh
+```
+
+
+Search all txt or TXT files in the user home directory:
+
+```bash
+$ search ~ .txt -i
 ```
 
 
