@@ -9,7 +9,7 @@ Errors when trying to traverse into a directory are ignored.
 
 A call `search /path/to/search .txt example` is similar to the Linux command `grep -r --include "*.txt" "example" /path/to/search`.
 
-`Usage: ./search <folder> <extension> [<search_text>]`
+`Usage: ./search <folder> <extension> [-i] [-o] [<search_text>]`
 
 You may also specifify multiple search terms. To search case-insensitive, use the `-i` option, it applies to the search terms but also to the file extension. By default multiple search terms are combined with the logical AND operator. Specify the `-o` option to use the logical OR operator.
 
