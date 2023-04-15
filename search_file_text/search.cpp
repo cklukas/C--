@@ -87,12 +87,11 @@ int main(int argc, char *argv[])
     std::cerr << "Searches for text files that contain a specific search term and prints the file names to the console.\n";
     std::cerr << "Errors when traversing into a directory (e.g. access denied) are ignored.\n";
     std::cerr << "A call 'search /path/to/search .txt example' is similar to the Linux command 'grep -r --include \"*.txt\" \"example\" /path/to/search'.\n";
-    std::cerr << "Multiple search terms can be specified, and the search can be restricted to files that contain all search terms (AND) or at least one search term (OR).\n";
-    std::cerr << "If AND/OR is not specified for multiple search terms, the default is to only list files which contain all search terms (AND).\n";
-    std::cerr << "If AND/OR is specified multiple times as arguments, only the last specification is considered for combining the search of all otherwise specified search terms.\n";
+    std::cerr << "Multiple search terms can be specified.\n";
+    std::cerr << "If -o is specified, a file is listed, if any search term is found (OR combination)\n";
     std::cerr << "If -i is specified, the search is case insensitive, this applies to the search terms and the provided file extension.\n";
     std::cerr << "\n";
-    std::cerr << "Usage: " << argv[0] << " <folder> <extension> [<search_term1>] [AND/OR] [<search_term2>] [<search_term3>]...\n";
+    std::cerr << "Usage: " << argv[0] << " <folder> <extension> [<search_term1>] [-i] [-o] [<search_term2>] [<search_term3>]...\n";
     return 1;
   }
 
@@ -100,14 +99,14 @@ int main(int argc, char *argv[])
   std::string extension = argv[2];
   bool use_and = true;
   bool ignore_case = false;
+  bool search_or_specified = false;
   std::vector<std::string> search_terms;
   for (int i = 3; i < argc; ++i) {
       const auto& arg = argv[i];
-      if (strcmp(arg, "OR")==0) {
+      if (!search_or_specified && strcmp(arg, "-o")==0) {
           use_and = false;
-      } else if (strcmp(arg, "AND")==0) {
-          use_and = true;
-      } else if (strcmp(arg, "-i")==0) {
+          search_or_specified = true;
+      }  else if (strcmp(arg, "-i")==0) {
           ignore_case = true;
       } else {
         search_terms.push_back(argv[i]);

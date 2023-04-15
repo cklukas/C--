@@ -11,9 +11,9 @@ A call `search /path/to/search .txt example` is similar to the Linux command `gr
 
 `Usage: ./search <folder> <extension> [<search_text>]`
 
-You may also specifify multiple search terms. To search case-insensitive, use the `-i` option, it applies to the search terms but also to the file extension.
+You may also specifify multiple search terms. To search case-insensitive, use the `-i` option, it applies to the search terms but also to the file extension. By default multiple search terms are combined with the logical AND operator. Specify the `-o` option to use the logical OR operator.
 
-To search all Python files in the user home directory with the search term "hello" and "world", use this command:
+To search all Python files in the user home directory with the search term "hello" *and* "world", use this command:
 
 ```bash
 $ search ~ .py hello world
@@ -23,6 +23,12 @@ To make the search case-insensitive, use the `-i` option:
 
 ```bash
 $ search ~ .py -i hello world
+```
+
+To search for either "hello" *or* "world", use the `-o` option:
+
+```bash
+$ search ~ .py -o hello world
 ```
 
 To search for .jpg and .JPG files in the home directory or below, use the `-i` option:
