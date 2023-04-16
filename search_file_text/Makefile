@@ -17,4 +17,4 @@ install:
 	cp $(EXECUTABLE) /usr/local/bin
 
 clean:
-	rm -f search.o search
+	rm -f $(OBJECTS) $(EXECUTABLE)
