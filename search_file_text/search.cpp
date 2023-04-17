@@ -9,6 +9,9 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <vector>
+#include <algorithm>
+#include <cstring>
 
 namespace fs = std::filesystem;
 
