@@ -15,63 +15,76 @@
 
 namespace fs = std::filesystem;
 
-void toLower(std::vector<std::string>& vec) {
-    for (auto& str : vec) {
-        std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c){ return std::tolower(c); });
-    }
+void toLower(std::vector<std::string> &vec)
+{
+  for (auto &str : vec)
+  {
+    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c)
+                   { return std::tolower(c); });
+  }
 }
 
-std::string toLowerS(std::string str) {
-    std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c){ return std::tolower(c); });
-    return str;
+std::string toLowerS(std::string str)
+{
+  std::transform(str.begin(), str.end(), str.begin(), [](unsigned char c)
+                 { return std::tolower(c); });
+  return str;
 }
 
-void check_file(const std::filesystem::path path, const bool ignore_case, const bool use_and, const std::vector<std::string>& search_terms) {
-    if (search_terms.empty())
-    {
-      std::cout << path.string() << '\n';
-      return;
-    }
+void check_file(const std::filesystem::path path, const bool ignore_case, const bool use_and, const std::vector<std::string> &search_terms)
+{
+  if (search_terms.empty())
+  {
+    std::cout << path.string() << '\n';
+    return;
+  }
 
-    std::ifstream file(path);
-    std::string line;
-    bool has_all_search_terms = false;
-    bool has_at_least_one_search_term = false;
-    std::vector<std::string> search_terms_for_file = search_terms;
-    
-    while (std::getline(file, line))
+  std::ifstream file(path);
+  std::string line;
+  bool has_all_search_terms = false;
+  bool has_at_least_one_search_term = false;
+  std::vector<std::string> search_terms_for_file = search_terms;
+
+  while (std::getline(file, line))
+  {
+    if (ignore_case)
     {
-      if (ignore_case) {
-        std::transform(line.begin(), line.end(), line.begin(), ::tolower);
-      }
-      for (auto it_st = search_terms_for_file.begin(); it_st != search_terms_for_file.end(); ) {
-        if (line.find(*it_st) != std::string::npos) {
-          has_at_least_one_search_term = true;
-          if (!use_and) {
-            goto end_read_file_by_line;
-          }
-          it_st = search_terms_for_file.erase(it_st);
-        } else {
-          ++it_st;
+      std::transform(line.begin(), line.end(), line.begin(), ::tolower);
+    }
+    for (auto it_st = search_terms_for_file.begin(); it_st != search_terms_for_file.end();)
+    {
+      if (line.find(*it_st) != std::string::npos)
+      {
+        has_at_least_one_search_term = true;
+        if (!use_and)
+        {
+          goto end_read_file_by_line;
         }
+        it_st = search_terms_for_file.erase(it_st);
       }
-      if (search_terms_for_file.empty()) {
-        has_all_search_terms = true;
-        break;
+      else
+      {
+        ++it_st;
       }
     }
-    end_read_file_by_line:
-    
-    file.close();
-    
-    if ( (use_and && has_all_search_terms) || (!use_and && has_at_least_one_search_term) )
+    if (search_terms_for_file.empty())
     {
-      std::cout << path.string() << '\n';
+      has_all_search_terms = true;
+      break;
     }
+  }
+end_read_file_by_line:
+
+  file.close();
+
+  if ((use_and && has_all_search_terms) || (!use_and && has_at_least_one_search_term))
+  {
+    std::cout << path.string() << '\n';
+  }
 }
 
-void find_files_with_extension_and_search_text(const std::string &path, const std::string &extension, 
-      const bool ignore_case, const bool use_and, const std::vector<std::string>& search_terms)
+void find_files_with_extension_and_search_text(const std::string &path, const std::string &extension,
+                                               const bool ignore_case, const bool use_and, const std::vector<std::string> &search_terms)
 {
   auto iter = fs::recursive_directory_iterator(path, fs::directory_options::skip_permission_denied | fs::directory_options::follow_directory_symlink);
   auto end_iter = fs::end(iter);
@@ -80,19 +93,27 @@ void find_files_with_extension_and_search_text(const std::string &path, const st
   {
     if (ec)
     {
-        continue;
+      continue;
     }
     auto entry = *iter;
-    if (entry.path().extension() != extension || !entry.is_regular_file())
+    // convert entry path to string and check if it ends with the extension
+    // but not use .extension method, just the full string of the filename
+    // because the extension method does not work for files without extension
+
+    if (entry.path().string().size() < extension.size() ||
+        entry.path().string().substr(entry.path().string().size() - extension.size()) != extension ||
+        !entry.is_regular_file())
+    {
       continue;
-    
+    }
+
     check_file(entry.path(), ignore_case, use_and, search_terms);
   }
 }
 
 int main(int argc, char *argv[])
 {
-  if ( (argc < 2) || (strcmp(argv[1], "-h")==0) || (strcmp(argv[1], "--help")==0) )
+  if ((argc < 2) || (strcmp(argv[1], "-h") == 0) || (strcmp(argv[1], "--help") == 0))
   {
     std::cerr << "search - (c) 2023 by C. Klukas\n";
     std::cerr << "------------------------------\n";
@@ -116,33 +137,39 @@ int main(int argc, char *argv[])
   bool search_or_specified = false;
   std::vector<std::string> search_terms;
   int start_index = 3;
-  if (path == "-") 
+  if (path == "-")
     start_index = 2;
   else
     extension = argv[2];
-  
-  for (int i = start_index; i < argc; ++i) {
-      const auto& arg = argv[i];
-      if (!search_or_specified && strcmp(arg, "-o")==0) {
-          use_and = false;
-          search_or_specified = true;
-      }  else if (strcmp(arg, "-i")==0)
-          ignore_case = true;
-      else
-        search_terms.push_back(argv[i]);
+
+  for (int i = start_index; i < argc; ++i)
+  {
+    const auto &arg = argv[i];
+    if (!search_or_specified && strcmp(arg, "-o") == 0)
+    {
+      use_and = false;
+      search_or_specified = true;
+    }
+    else if (strcmp(arg, "-i") == 0)
+      ignore_case = true;
+    else
+      search_terms.push_back(argv[i]);
   }
 
-  if (ignore_case) {
+  if (ignore_case)
+  {
     toLower(search_terms);
     extension = toLowerS(extension);
   }
-  
-  if (path == "-") {
+
+  if (path == "-")
+  {
     std::string fn;
     while (std::getline(std::cin, fn))
       check_file(fn, ignore_case, use_and, search_terms);
-  } else
+  }
+  else
     find_files_with_extension_and_search_text(path, extension, ignore_case, use_and, search_terms);
-  
+
   return 0;
 }

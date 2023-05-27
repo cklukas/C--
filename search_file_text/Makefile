@@ -1,20 +1,21 @@
 CC=g++
-CFLAGS=-c -Wall -std=c++17
-LDFLAGS=
-SOURCES=search.cpp
+CFLAGS=-c -Wall -std=c++17 
+LDFLAGS=-lncurses
+SOURCES=searchui.cpp ui.cpp ui.hpp
 OBJECTS=$(SOURCES:.cpp=.o)
-EXECUTABLE=search
+EXECUTABLE=searchui
 
 all: $(SOURCES) $(EXECUTABLE)
 
 $(EXECUTABLE): $(OBJECTS)
-	$(CC) $(LDFLAGS) $(OBJECTS) -o $@
+	$(CC) $(LDFLAGS) $(OBJECTS) 
+	mv a.out $(EXECUTABLE)
 
 .cpp.o:
-	$(CC) $(CFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $< 
 
 install:
 	cp $(EXECUTABLE) /usr/local/bin
 
 clean:
-	rm -f $(OBJECTS) $(EXECUTABLE)
+	rm -f *.o ${EXECUTABLE}
