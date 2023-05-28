@@ -35,4 +35,3 @@ test/*.obj
 # Generated coverage files
 coverage/
 
-search_file_text/
