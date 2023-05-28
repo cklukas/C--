@@ -1,32 +1,41 @@
-AC_INIT([searchui], [1.0])
-AC_CONFIG_SRCDIR([searchui.cpp])
-AC_PROG_CXX
-AC_PROG_RANLIB
-AM_INIT_AUTOMAKE([foreign])
-AC_CONFIG_HEADERS([src/config.h])
-AC_CHECK_LIB([ncurses], [main])
-AC_CONFIG_FILES([Makefile])
-
-
+# Ensure autoconf version is 2.71 or newer.
 AC_PREREQ([2.71])
-# AC_INIT([FULL-PACKAGE-NAME], [VERSION], [BUG-REPORT-ADDRESS])
-AC_CONFIG_SRCDIR([src/ui.cpp])
 
-# Checks for programs.
+# Initialize autoconf for package 'searchui' version 1.0.
+AC_INIT([searchui], [1.0])
+
+# Specify the source directory for autoconf.
+# This macro will check if the specified source file exists.
+AC_CONFIG_SRCDIR([src/searchui.cpp])
+
+# Initialize Automake with 'foreign' mode, 
+# which reduces the requirements for GNU standards compliance (e.g., file naming and presence).
+AM_INIT_AUTOMAKE([foreign])
+
+# Set up the C++ compiler.
 AC_PROG_CXX
 
-# Checks for libraries.
-# FIXME: Replace 'main' with a function in '-lncurses':
+# Detect the ranlib tool for generating index to archive.
+AC_PROG_RANLIB
+
+# Check for the presence of the ncurses library and the main function within it.
+# Replace 'main' with a function in the ncurses library.
 AC_CHECK_LIB([ncurses], [main])
 
-# Checks for header files.
-
-# Checks for typedefs, structures, and compiler characteristics.
+# Check for the presence of the stdbool.h header file.
 AC_CHECK_HEADER_STDBOOL
+
+# Check for the presence and size of size_t.
 AC_TYPE_SIZE_T
 
-# Checks for library functions.
+# Check for the presence of the strerror function.
 AC_CHECK_FUNCS([strerror])
 
+# Set up a configuration header file (src/config.h in this case).
+AC_CONFIG_HEADERS([src/config.h])
 
+# List the files to be configured. The Makefile will be generated in the src directory.
+AC_CONFIG_FILES([src/Makefile])
+
+# Generate the output files.
 AC_OUTPUT
