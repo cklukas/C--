@@ -1,0 +1,17 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug SearchT",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/search_file_text/src/searcht",
+            "args": [],
+            "cwd": "${workspaceFolder}/search_file_text/src",
+            "environment": [],
+            "externalConsole": true,
+            "MIMode": "lldb",
+            "preLaunchTask": "Automake: build"
+        }
+    ]
+}

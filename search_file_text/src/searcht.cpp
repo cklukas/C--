@@ -1,3 +1,18 @@
+/*
+ * File: searcht.cpp
+ * -----------------------------------------------------------------------------
+ * This file is part of the File Search Program - (c) 2023 by C. Klukas
+ *
+ * Licensed under the MIT License and the GNU General Public License, Version 3.
+ *
+ * For details, see the accompanying COPYING file or visit:
+ * - MIT License: https://opensource.org/licenses/MIT
+ * - GPLv3: https://www.gnu.org/licenses/gpl-3.0.html
+ *
+ * Project repository: https://github.com/cklukas/C--
+ *
+ * Author: Christian Klukas
+ */
 #define Uses_TApplication
 #define Uses_TDeskTop
 #define Uses_TRect
@@ -14,6 +29,7 @@
 #define Uses_TProgram
 #define Uses_TScreen
 #define Uses_TDrawSurface
+#define Uses_TButton
 
 #include <tvision/tv.h>
 #include <vector>
@@ -23,146 +39,47 @@
 #include <iomanip>
 #include <cstdlib>
 
-#ifdef __linux__
-// Linux-specific code
-#elif __APPLE__
-// macOS-specific code
-#include <sys/sysctl.h>
-#endif
+#include "system_info_window.hpp"
+#include "modules/SystemInfo.hpp"
+#include "modules/load/SystemLoad.hpp"
+#include "modules/cpu/CpuLoad.hpp"
 
-// This function is used to fetch the system load depending on the operating system in use.
-double getSystemLoad()
-{
-    struct loadavg load;
-
-#ifdef __linux__
-    // Linux-specific code
-    std::ifstream loadavg("/proc/loadavg");
-    if (loadavg >> load)
-    {
-        return load;
-    }
-#elif __APPLE__
-    // macOS-specific code
-
-    int mib[2];
-    size_t len = sizeof(load);
-    mib[0] = CTL_VM;
-    mib[1] = VM_LOADAVG;
-
-    if (sysctl(mib, 2, &load, &len, nullptr, 0) != -1)
-    {
-        return load.ldavg[0] / (double)load.fscale;
-    }
-#endif
-
-    // Error reading load average or unsupported platform
-    return -1.0;
-}
-
-// This class is used to create a System Load Window.
-// It's a graphical representation of the system load over time.
-class SystemLoadWindow : public TWindow
-{
-
-public:
-    SystemLoadWindow(const TRect &bounds, std::vector<double> &systemLoad)
-        : TWindow(bounds, "System Load", wnNoNumber), TWindowInit(&TWindow::initFrame), systemLoad(systemLoad)
-    {
-    }
-
-    virtual const char *getTitle(short maxSize) override
-    {
-        // check if the systemLoad vector is empty
-        if (this->systemLoad.empty())
-        {
-            return TWindow::getTitle(maxSize);
-        }
-        else
-        {
-            double load = systemLoad.back();
-            std::stringstream ss;
-            ss << "System Load (" << std::fixed << std::setprecision(2) << load << ")";
-
-            // if length of ss is > maxSize, then truncate it and add "..." to the end
-            if (ss.str().length() > maxSize)
-            {
-                std::string truncated = ss.str().substr(0, maxSize - 3);
-                truncated += "...";
-                this->title = ss.str();
-            }
-            else
-            {
-                // to avoid warning: address of stack memory associated with local variable 'truncated' returned
-                // we need to return a c_str() of a string that is not local to this function
-                std::string truncated = ss.str();
-                this->title = truncated;
-            }
-            return this->title.c_str();
-        }
-    }
-
-    // This method draws load bars proportional to the system load at a certain time point.
-    void drawLoadBars()
-    {
-        int width = this->size.x;
-        
-
-        ushort color = getColor(0x0302);
-        for (size_t i = 0; i < width-2; ++i)
-        {
-            // Ensure that we don't go out of bounds of the systemLoad vector
-            if (i < systemLoad.size())
-            {
-                int load = systemLoad[systemLoad.size() - 1 - i] * 5.0;
-                load = std::max(0, std::min(load, size.y - 1));
-                for (int y = 0; y < load; ++y)
-                {
-                    TDrawBuffer b;
-                    b.moveStr(0, "▓", color, 1);
-                    if (y < size.y - 2)
-                        writeLine(width - i - 2, size.y - y - 2, 1, 1, b);
-                }
-            }
-        }
-    }
-
-    // This method draws the system load window, including its title and load bars.
-    void draw() override
-    {
-        TWindow::draw();
-        drawLoadBars();
-    }
-
-    virtual void close() override
-    {
-        exit(EXIT_SUCCESS);
-        TWindow::close();
-    }
-
-private:
-    std::vector<double> &systemLoad;
-    mutable std::string title;
-};
+const int cmAboutCmd = 100; // User selected menu item 'About'
+const int cmLoadCmd = 101;  // User selected menu item 'System Load'
+const int cmCpuCmd = 102;   // User selected menu item 'CPU Load'
+const int cmFileSearchCmd = 103;   // User selected menu item 'File/Search'
 
 // This class is used to manage the application state for the System Load Window.
 // It includes functionality to periodically update the system load and redraw the System Load Window.
 class SystemLoadApp : public TApplication
 {
-
 public:
+    static TMenuBar *initMenuBar(TRect);
+    void handleEvent(TEvent &) override;
+
     SystemLoadApp(std::vector<double> &systemLoadVector)
-        : TApplication(), TProgInit(&TApplication::initStatusLine, &TApplication::initMenuBar,
-                                    &TApplication::initDeskTop),
-          systemLoadVector(systemLoadVector)
+        : TProgInit(&TApplication::initStatusLine, 
+                    &SystemLoadApp::initMenuBar,
+                    &TApplication::initDeskTop),
+          TApplication(),
+          lastUpdate(std::chrono::system_clock::now())
     {
-        lastUpdate = std::chrono::system_clock::now();
-        TRect r(0, 0, 50, 20);
-        r.move((TScreen::screenWidth - r.b.x) / 2, (TScreen::screenHeight - r.b.y) / 2);
-        w = new SystemLoadWindow(r, systemLoadVector);
-        if (validView(w) != 0)
+        TRect r1(0, 0, 50, 20);
+        r1.move((TScreen::screenWidth - r1.b.x) / 2 - 55, (TScreen::screenHeight - r1.b.y) / 2);
+
+        systemLoadWindow = std::make_unique<SystemInfoWindow>(r1, std::make_unique<SystemLoad>());
+        if (validView(systemLoadWindow.get()) != 0)
         {
-            deskTop->insert(w);
+            deskTop->insert(systemLoadWindow.get());
+        }
+
+        TRect r2(0, 0, 50, 20);
+        r2.move((TScreen::screenWidth - r2.b.x) / 2 + 5, (TScreen::screenHeight - r2.b.y) / 2);
+
+        cpuLoadWindow = std::make_unique<SystemInfoWindow>(r2, std::make_unique<CpuLoad>());
+        if (validView(systemLoadWindow.get()) != 0)
+        {
+            deskTop->insert(cpuLoadWindow.get());
         }
     }
 
@@ -170,38 +87,98 @@ public:
     // It fetches the latest system load, updates the system load vector, and redraws the System Load Window.
     void idle() override
     {
-        // check if w is null
-        if (w != nullptr && w->valid(0))
+        if ((systemLoadWindow->state & sfExposed) == sfExposed ||
+            (cpuLoadWindow->state & sfExposed) == sfExposed)
         {
             auto now = std::chrono::system_clock::now();
             if (std::chrono::duration_cast<std::chrono::seconds>(now - lastUpdate).count() >= 1)
             {
-                float load = getSystemLoad();
-                if (load >= -2.0)
-                {
-                    // Successfully read load average, update systemLoad vector.
-                    systemLoadVector.push_back(static_cast<double>(load));
-                    // get terminal width
-                    int width = TScreen::screenWidth;
-                    if (systemLoadVector.size() > width)
-                    {
-                        // Keep the size of the vector to width.
-                        systemLoadVector.erase(systemLoadVector.begin());
-                    }
-                }
+                if ((systemLoadWindow->state & sfExposed) == sfExposed)
+                    systemLoadWindow->idle();
+                
+                if ((cpuLoadWindow->state & sfExposed) == sfExposed)
+                    cpuLoadWindow->idle();
+
                 lastUpdate = now;
-                w->redraw();
-                w->draw();
             }
         }
         TApplication::idle();
     }
 
 private:
-    std::vector<double> &systemLoadVector;
     std::chrono::system_clock::time_point lastUpdate;
-    SystemLoadWindow *w;
+    std::unique_ptr<SystemInfoWindow> systemLoadWindow;
+    std::unique_ptr<SystemInfoWindow> cpuLoadWindow;
+
+    void aboutDlg();
 };
+
+TMenuBar *SystemLoadApp::initMenuBar(TRect bounds)
+{
+    bounds.b.y = bounds.a.y + 1;
+
+    return new TMenuBar(bounds,
+                        *new TSubMenu("~F~ile", kbAltF) +
+                            *new TMenuItem("~S~earch", cmFileSearchCmd, kbAltS, hcNoContext, "Alt-S") +
+                            newLine() +
+                            *new TMenuItem("E~x~it", cmQuit, cmQuit, hcNoContext, "Alt-X") +
+                        *new TSubMenu("~S~ystem", kbAltF) +
+                            *new TMenuItem("~L~oad", cmLoadCmd, kbAltL, hcNoContext, "Alt-L") +
+                            *new TMenuItem("~C~PUs", cmCpuCmd, kbAltC, hcNoContext, "Alt-C") +
+                        *new TSubMenu("~H~elp", kbAltH) +
+                            *new TMenuItem("~A~bout", cmAboutCmd, kbAltA, hcNoContext, "F1")
+                        );
+}
+
+void SystemLoadApp::handleEvent(TEvent &event)
+{
+    TApplication::handleEvent(event);
+
+    if (event.what == evCommand)
+    {
+        switch (event.message.command)
+        {
+        case cmLoadCmd:
+        {
+            systemLoadWindow->select();
+            clearEvent(event);
+            break;
+        }
+        case cmCpuCmd:
+        {
+            cpuLoadWindow->select();
+            clearEvent(event);
+            break;
+        }
+        case cmAboutCmd:
+        {
+            aboutDlg();
+            clearEvent(event);
+            break;
+        }
+        }
+    }
+}
+
+void SystemLoadApp::aboutDlg()
+{
+    TDialog *pd = new TDialog(TRect(0, 0, 35, 12), "About");
+    if (pd)
+    {
+        pd->options |= ofCentered;
+        pd->insert(new TStaticText(TRect(1, 2, 34, 7),
+                                   "\003CK System Utilities\n\003\n\003Version 1.0\n\003\n"
+                                   "\003© 2023 by C. Klukas\n\003\n"));
+        pd->insert(new TButton(TRect(3, 9, 32, 11), "~O~k", cmOK, bfDefault));
+
+        if (validView(pd) != 0)
+        {
+            deskTop->execView(pd);
+
+            destroy(pd);
+        }
+    }
+}
 
 // The main entry point of the program.
 // It initializes an empty system load vector, creates a SystemLoadApp instance, and runs the application.
@@ -215,6 +192,15 @@ int main()
 
 // compile on Mac: g++ -std=c++14  -o searcht searcht.cpp -ltvision -Iinclude -lncurses
 // g++ -g -std=c++14  -o searcht searcht.cpp -ltvision -Iinclude -lncurses && ./searcht
-// lldb ./searcht 
+// lldb ./searcht
 //
 // ioreg -l | grep -i "gpu"
+
+//
+// autoreconf -f -i
+// ./configure --enable-searcht
+// make
+//
+
+// cd src
+// g++ -std=c++14 -Imodules searcht.cpp modules/cpu/*.cpp modules/load/*.cpp -ltvision  -lncurses -o searcht

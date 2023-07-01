@@ -55,6 +55,18 @@
         "variant": "cpp",
         "vector": "cpp",
         "fstream": "cpp",
-        "iomanip": "cpp"
-    }
+        "iomanip": "cpp",
+        "sstream": "cpp",
+        "__nullptr": "cpp",
+        "__string": "cpp",
+        "chrono": "cpp",
+        "compare": "cpp",
+        "complex": "cpp",
+        "deque": "cpp",
+        "stack": "cpp",
+        "strstream": "cpp",
+        "typeindex": "cpp",
+        "algorithm": "cpp"
+    },
+    "cmake.sourceDirectory": "/Users/klukas/Documents/Development/C++/tvision"
 }

@@ -35,3 +35,5 @@ test/*.obj
 # Generated coverage files
 coverage/
 
+**/.deps/*
+build/

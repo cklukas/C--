@@ -1,10 +1,22 @@
-// search.cpp
-//
-// Created: 2023-04-14
-// Author: (c) 2023 by C. Klukas
-// License: MIT
-// Description: Searches for text files that contain a specific search term and prints the file names to the console.
-//
+/*
+ * File: search.cpp
+ *
+ * Description: Searches for text files that contain a specific search term and 
+ * prints the file names to the console.
+ * -----------------------------------------------------------------------------
+ * This file is part of the File Search Program - (c) 2023 by C. Klukas
+ * 
+ * Licensed under the MIT License and the GNU General Public License, Version 3.
+ * 
+ * For details, see the accompanying COPYING file or visit:
+ * - MIT License: https://opensource.org/licenses/MIT
+ * - GPLv3: https://www.gnu.org/licenses/gpl-3.0.html
+ *
+ * Project repository: https://github.com/cklukas/C--
+ * 
+ * Created: 2023-04-14
+ * Author: Christian Klukas
+ */
 #include <iostream>
 #include <filesystem>
 #include <fstream>
