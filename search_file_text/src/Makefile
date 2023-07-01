@@ -104,12 +104,14 @@ PROGRAMS = $(bin_PROGRAMS)
 am__searcht_SOURCES_DIST = system_info_window.cpp \
 	system_info_window.hpp searcht.cpp modules/SystemInfo.hpp \
 	modules/load/SystemLoad.hpp modules/load/SystemLoad.cpp \
-	modules/cpu/CpuLoad.hpp modules/cpu/CpuLoad.cpp
+	modules/cpu/CpuLoad.hpp modules/cpu/CpuLoad.cpp \
+	modules/gpu/GpuLoad.hpp modules/gpu/GpuLoad.cpp
 am__dirstamp = $(am__leading_dot)dirstamp
 am_searcht_OBJECTS = system_info_window.$(OBJEXT) \
 	searcht.$(OBJEXT) \
 	modules/load/SystemLoad.$(OBJEXT) \
-	modules/cpu/CpuLoad.$(OBJEXT)
+	modules/cpu/CpuLoad.$(OBJEXT) \
+	modules/gpu/GpuLoad.$(OBJEXT)
 searcht_OBJECTS = $(am_searcht_OBJECTS)
 searcht_DEPENDENCIES =
 am_searchui_OBJECTS = searchui.$(OBJEXT) ui.$(OBJEXT)
@@ -133,6 +135,7 @@ am__maybe_remake_depfiles = depfiles
 am__depfiles_remade = ./$(DEPDIR)/searcht.Po ./$(DEPDIR)/searchui.Po \
 	./$(DEPDIR)/system_info_window.Po ./$(DEPDIR)/ui.Po \
 	modules/cpu/$(DEPDIR)/CpuLoad.Po \
+	modules/gpu/$(DEPDIR)/GpuLoad.Po \
 	modules/load/$(DEPDIR)/SystemLoad.Po
 am__mv = mv -f
 CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
@@ -295,14 +298,16 @@ searcht_SOURCES = \
 	modules/load/SystemLoad.hpp \
 	modules/load/SystemLoad.cpp \
 	modules/cpu/CpuLoad.hpp \
-	modules/cpu/CpuLoad.cpp
+	modules/cpu/CpuLoad.cpp \
+	modules/gpu/GpuLoad.hpp \
+	modules/gpu/GpuLoad.cpp 
 
 
 # Specify the libraries for 'searchui'.
 searchui_LDADD = -lncurses
 
 # Specify the libraries for 'searcht' (if enabled).
-searcht_LDADD = -ltvision
+searcht_LDADD = -ltvision -lAppleGPUTools
 
 # Specify any additional flags for the C++ compiler.
 AM_CPPFLAGS = -Wall -std=c++17
@@ -413,6 +418,14 @@ modules/cpu/$(DEPDIR)/$(am__dirstamp):
 	@: > modules/cpu/$(DEPDIR)/$(am__dirstamp)
 modules/cpu/CpuLoad.$(OBJEXT): modules/cpu/$(am__dirstamp) \
 	modules/cpu/$(DEPDIR)/$(am__dirstamp)
+modules/gpu/$(am__dirstamp):
+	@$(MKDIR_P) modules/gpu
+	@: > modules/gpu/$(am__dirstamp)
+modules/gpu/$(DEPDIR)/$(am__dirstamp):
+	@$(MKDIR_P) modules/gpu/$(DEPDIR)
+	@: > modules/gpu/$(DEPDIR)/$(am__dirstamp)
+modules/gpu/GpuLoad.$(OBJEXT): modules/gpu/$(am__dirstamp) \
+	modules/gpu/$(DEPDIR)/$(am__dirstamp)
 
 searcht$(EXEEXT): $(searcht_OBJECTS) $(searcht_DEPENDENCIES) $(EXTRA_searcht_DEPENDENCIES) 
 	@rm -f searcht$(EXEEXT)
@@ -425,6 +438,7 @@ searchui$(EXEEXT): $(searchui_OBJECTS) $(searchui_DEPENDENCIES) $(EXTRA_searchui
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 	-rm -f modules/cpu/*.$(OBJEXT)
+	-rm -f modules/gpu/*.$(OBJEXT)
 	-rm -f modules/load/*.$(OBJEXT)
 
 distclean-compile:
@@ -435,6 +449,7 @@ include ./$(DEPDIR)/searchui.Po # am--include-marker
 include ./$(DEPDIR)/system_info_window.Po # am--include-marker
 include ./$(DEPDIR)/ui.Po # am--include-marker
 include modules/cpu/$(DEPDIR)/CpuLoad.Po # am--include-marker
+include modules/gpu/$(DEPDIR)/GpuLoad.Po # am--include-marker
 include modules/load/$(DEPDIR)/SystemLoad.Po # am--include-marker
 
 $(am__depfiles_remade):
@@ -578,6 +593,8 @@ distclean-generic:
 	-test . = "$(srcdir)" || test -z "$(CONFIG_CLEAN_VPATH_FILES)" || rm -f $(CONFIG_CLEAN_VPATH_FILES)
 	-rm -f modules/cpu/$(DEPDIR)/$(am__dirstamp)
 	-rm -f modules/cpu/$(am__dirstamp)
+	-rm -f modules/gpu/$(DEPDIR)/$(am__dirstamp)
+	-rm -f modules/gpu/$(am__dirstamp)
 	-rm -f modules/load/$(DEPDIR)/$(am__dirstamp)
 	-rm -f modules/load/$(am__dirstamp)
 
@@ -594,6 +611,7 @@ distclean: distclean-am
 	-rm -f ./$(DEPDIR)/system_info_window.Po
 	-rm -f ./$(DEPDIR)/ui.Po
 	-rm -f modules/cpu/$(DEPDIR)/CpuLoad.Po
+	-rm -f modules/gpu/$(DEPDIR)/GpuLoad.Po
 	-rm -f modules/load/$(DEPDIR)/SystemLoad.Po
 	-rm -f Makefile
 distclean-am: clean-am distclean-compile distclean-generic \
@@ -645,6 +663,7 @@ maintainer-clean: maintainer-clean-am
 	-rm -f ./$(DEPDIR)/system_info_window.Po
 	-rm -f ./$(DEPDIR)/ui.Po
 	-rm -f modules/cpu/$(DEPDIR)/CpuLoad.Po
+	-rm -f modules/gpu/$(DEPDIR)/GpuLoad.Po
 	-rm -f modules/load/$(DEPDIR)/SystemLoad.Po
 	-rm -f Makefile
 maintainer-clean-am: distclean-am maintainer-clean-generic

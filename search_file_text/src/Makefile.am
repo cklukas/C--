@@ -17,7 +17,9 @@ searcht_SOURCES = \
 	modules/load/SystemLoad.hpp \
 	modules/load/SystemLoad.cpp \
 	modules/cpu/CpuLoad.hpp \
-	modules/cpu/CpuLoad.cpp
+	modules/cpu/CpuLoad.cpp \
+	modules/gpu/GpuLoad.hpp \
+	modules/gpu/GpuLoad.cpp 
 endif
 
 # Specify the libraries for 'searchui'.

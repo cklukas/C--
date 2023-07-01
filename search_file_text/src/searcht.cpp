@@ -43,11 +43,13 @@
 #include "modules/SystemInfo.hpp"
 #include "modules/load/SystemLoad.hpp"
 #include "modules/cpu/CpuLoad.hpp"
+#include "modules/gpu/GpuLoad.hpp"
 
 const int cmAboutCmd = 100; // User selected menu item 'About'
 const int cmLoadCmd = 101;  // User selected menu item 'System Load'
 const int cmCpuCmd = 102;   // User selected menu item 'CPU Load'
-const int cmFileSearchCmd = 103;   // User selected menu item 'File/Search'
+const int cmGpuCmd = 103;   // User selected menu item 'GPU Load'
+const int cmFileSearchCmd = 104;   // User selected menu item 'File/Search'
 
 // This class is used to manage the application state for the System Load Window.
 // It includes functionality to periodically update the system load and redraw the System Load Window.
@@ -65,7 +67,7 @@ public:
           lastUpdate(std::chrono::system_clock::now())
     {
         TRect r1(0, 0, 50, 20);
-        r1.move((TScreen::screenWidth - r1.b.x) / 2 - 55, (TScreen::screenHeight - r1.b.y) / 2);
+        r1.move((TScreen::screenWidth - r1.b.x) / 2 - 5, (TScreen::screenHeight - r1.b.y) / 2);
 
         systemLoadWindow = std::make_unique<SystemInfoWindow>(r1, std::make_unique<SystemLoad>());
         if (validView(systemLoadWindow.get()) != 0)
@@ -77,9 +79,18 @@ public:
         r2.move((TScreen::screenWidth - r2.b.x) / 2 + 5, (TScreen::screenHeight - r2.b.y) / 2);
 
         cpuLoadWindow = std::make_unique<SystemInfoWindow>(r2, std::make_unique<CpuLoad>());
-        if (validView(systemLoadWindow.get()) != 0)
+        if (validView(cpuLoadWindow.get()) != 0)
         {
             deskTop->insert(cpuLoadWindow.get());
+        }
+
+        TRect r3(0, 0, 50, 20);
+        r3.move((TScreen::screenWidth - r3.b.x) / 2 + 10, (TScreen::screenHeight - r3.b.y) / 2);
+
+        gpuLoadWindow = std::make_unique<SystemInfoWindow>(r3, std::make_unique<GpuLoad>());
+        if (validView(gpuLoadWindow.get()) != 0)
+        {
+            deskTop->insert(gpuLoadWindow.get());
         }
     }
 
@@ -88,7 +99,8 @@ public:
     void idle() override
     {
         if ((systemLoadWindow->state & sfExposed) == sfExposed ||
-            (cpuLoadWindow->state & sfExposed) == sfExposed)
+            (cpuLoadWindow->state & sfExposed) == sfExposed ||
+            (gpuLoadWindow->state & sfExposed) == sfExposed)
         {
             auto now = std::chrono::system_clock::now();
             if (std::chrono::duration_cast<std::chrono::seconds>(now - lastUpdate).count() >= 1)
@@ -98,6 +110,9 @@ public:
                 
                 if ((cpuLoadWindow->state & sfExposed) == sfExposed)
                     cpuLoadWindow->idle();
+
+                if ((gpuLoadWindow->state & sfExposed) == sfExposed)
+                    gpuLoadWindow->idle();
 
                 lastUpdate = now;
             }
@@ -109,6 +124,7 @@ private:
     std::chrono::system_clock::time_point lastUpdate;
     std::unique_ptr<SystemInfoWindow> systemLoadWindow;
     std::unique_ptr<SystemInfoWindow> cpuLoadWindow;
+    std::unique_ptr<SystemInfoWindow> gpuLoadWindow;
 
     void aboutDlg();
 };
@@ -125,6 +141,7 @@ TMenuBar *SystemLoadApp::initMenuBar(TRect bounds)
                         *new TSubMenu("~S~ystem", kbAltF) +
                             *new TMenuItem("~L~oad", cmLoadCmd, kbAltL, hcNoContext, "Alt-L") +
                             *new TMenuItem("~C~PUs", cmCpuCmd, kbAltC, hcNoContext, "Alt-C") +
+                            *new TMenuItem("~G~PUs", cmGpuCmd, kbAltG, hcNoContext, "Alt-G") +
                         *new TSubMenu("~H~elp", kbAltH) +
                             *new TMenuItem("~A~bout", cmAboutCmd, kbAltA, hcNoContext, "F1")
                         );
@@ -147,6 +164,12 @@ void SystemLoadApp::handleEvent(TEvent &event)
         case cmCpuCmd:
         {
             cpuLoadWindow->select();
+            clearEvent(event);
+            break;
+        }
+        case cmGpuCmd:
+        {
+            gpuLoadWindow->select();
             clearEvent(event);
             break;
         }
