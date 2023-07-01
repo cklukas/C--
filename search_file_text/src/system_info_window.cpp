@@ -93,6 +93,13 @@ void SystemInfoWindow::drawLoadBars()
         maxYstr.str(maxYstr.str().substr(0, maxYstr.str().size() - 2));
         middleYstr.str(middleYstr.str().substr(0, middleYstr.str().size() - 2));
     }
+
+    auto strMaxLen = maxYstr.str().size();
+    auto strMidLen = middleYstr.str().size();
+
+    int maxLinePosY = 1;
+    int midLinePosY = size.y / 2;
+
     //
     // Y axis labels are now determined
 
@@ -110,6 +117,14 @@ void SystemInfoWindow::drawLoadBars()
     b.moveStr(0, lineString, getColor(1));
     writeBuf(1, size.y/2, size.x-2, 1, b);
 
+    bool coverTopStr[strMaxLen];
+    bool coverMidStr[strMidLen];
+
+    // initialize coverTopStr and coverMidStr to false
+    for (int i = 0; i < strMaxLen; ++i)
+        coverTopStr[i] = false;
+    for (int i = 0; i < strMidLen; ++i)
+        coverMidStr[i] = false;
 
     // draw histogram
     //
@@ -131,7 +146,13 @@ void SystemInfoWindow::drawLoadBars()
                 TDrawBuffer b;
                 if (y < size.y - 2)
                     b.moveStr(0, " ", color, 1);
-                    writeLine(width - i - 2, size.y - y - 2, 1, 1, b);
+                    int xCoor = width - i - 2;
+                    int yCoor = size.y - y - 2;
+                    writeLine(xCoor, yCoor, 1, 1, b);
+                    if (xCoor-1<strMaxLen && yCoor==maxLinePosY)
+                        coverTopStr[xCoor-1] = true;
+                    if (xCoor-1<strMidLen && yCoor==midLinePosY)
+                        coverMidStr[xCoor-1] = true;
             }
         }
     }
@@ -141,18 +162,12 @@ void SystemInfoWindow::drawLoadBars()
     ushort colorF = getColor(1);
     ushort colorT = getColor(4);
 
-    auto strMaxLen = maxYstr.str().size();
-    auto strMidLen = middleYstr.str().size();
-    
-    bool* maxLoadCoversMaxVal = this->systemInfo->getCoverFlags(size.x-2, strMaxLen, maxValue);
-    bool* maxLoadCoversMidVal = this->systemInfo->getCoverFlags(size.x-2, strMidLen, maxValue/2);
-    
     TDrawBuffer maxValBuffer;
     
     for (int i = 0; i < strMaxLen; ++i)
     {
         TDrawBuffer b;
-        b.moveChar(0, maxYstr.str()[i], maxLoadCoversMaxVal[i] ? colorT : colorF, 1);
+        b.moveChar(0, maxYstr.str()[i], coverTopStr[i] ? colorT : colorF, 1);
         writeBuf(i + 1, 1, 1, 1, b);
     }
     
@@ -161,11 +176,9 @@ void SystemInfoWindow::drawLoadBars()
     for (int i = 0; i < strMidLen; ++i)
     {
         TDrawBuffer b;
-        b.moveChar(0, middleYstr.str()[i], maxLoadCoversMidVal[i] ? colorT : colorF, 1);
-        writeBuf(i + 1, size.y / 2, 1, 1, b);
+        b.moveChar(0, middleYstr.str()[i], coverMidStr[i] ? colorT : colorF, 1);
+        writeBuf(i + 1, midLinePosY, 1, 1, b);
     }
-    delete(maxLoadCoversMaxVal);
-    delete(maxLoadCoversMidVal);
 
     auto debug = False;
     if (debug) {
