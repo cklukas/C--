@@ -37,3 +37,4 @@ coverage/
 
 **/.deps/*
 build/
+search_file_text/src/searcht
